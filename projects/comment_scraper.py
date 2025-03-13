@@ -1,7 +1,5 @@
 """
-Show how to use custom outputs.
-
-@dev You need to add OPENAI_API_KEY to your environment variables.
+Chương trình này sử dụng AI để lấy các bình luận từ các bài viết trên mạng xã hội.
 """
 
 import os
@@ -18,7 +16,23 @@ import pandas as pd
 from browser_use.browser.browser import Browser, BrowserConfig
 import time
 
-load_dotenv() # load biến môi trường từ file .env
+# API keys
+# load_dotenv() # load biến môi trường từ file .env
+os.environ['GOOGLE_API_KEY_1'] = "AIzaSyDXSbFjir7LIPEQgWCI-wWC-cVFrPR08b0"
+os.environ['GOOGLE_API_KEY_2'] = "AIzaSyAIN3n8oLvnJQLA7Wrix8xgmR6K2aQyywc"
+os.environ['GOOGLE_API_KEY_3'] = "AIzaSyAz8q7IjtRfAXZaaiT7fom34-n-zF60Vsc"
+os.environ['GOOGLE_API_KEY_4'] = "AIzaSyA8p3jiEtXWInt-FbjBcQwPG02cGZYHb2s"
+os.environ['GOOGLE_API_KEY_5'] = "AIzaSyAXgfR7KfcE4qEgGcpKG8V2FXZJ1_5NsjU"
+
+API_KEYS = [
+	os.environ.get('GOOGLE_API_KEY_1'),
+	os.environ.get('GOOGLE_API_KEY_2'),
+	os.environ.get('GOOGLE_API_KEY_3'),
+	os.environ.get('GOOGLE_API_KEY_4'),
+	os.environ.get('GOOGLE_API_KEY_5')
+]
+
+current_key_index = 1
 
 # Khởi tạo trình duyệt
 browser = Browser(
@@ -44,8 +58,8 @@ class Posts(BaseModel):
 controller = Controller(output_model=Posts) # output_model: AI model sẽ trả về kết quả đúng với định dạng Posts (danh sách các bài đăng). Nếu sai dịnh dạng, Pydantic sẽ báo lỗi.
 
 # Hàm chính. Main() là hàm bất đồng bộ.
-async def main(task, i):
-	model = ChatGoogleGenerativeAI(model='gemini-2.0-flash')
+async def main(task, i, api_key):
+	model = ChatGoogleGenerativeAI(model='gemini-2.0-flash', api_key=api_key)
 	# Tạo Agent và chạy nhiệm vụ
 	agent = Agent(task=task, llm=model, controller=controller, browser=browser) # task: yêu cầu AI thực hiện. llm: model AI sử dụng. Controller: điều khiển và đảm bảo kết quả đúng định dạng Posts.
 	
@@ -63,22 +77,23 @@ async def main(task, i):
 		print('No result')
 
 	df = pd.DataFrame(parsed.model_dump()['posts']) # converting a model to a dictionary. Sub-models will be recursively converted to dictionaries.
-	df.to_csv(f'custom_output_{i}.csv', index=False)
+	df.to_csv(f'output_{i}.csv', index=False)
 	await browser.close()
 
 
-	
 
 # Chạy chương trình
 if __name__ == '__main__':
 	link = pd.read_csv('links.csv', encoding='utf-8', header=None).squeeze().tolist() # output: dataframe -> numpy.ndarray -> lists
-	for i in range(0, 2): # default: len(link)
-		task = f'Go to {link[i]} to get available comments (limit scrolls: 2)'
-		asyncio.run(main(task, i))
-		sleep_time = 30
-		print(f'Sleeping for {sleep_time} seconds...')
-		time.sleep(sleep_time)
-
-
-
+	stop_index = 2 # default: len(link)
+	for i in range(0, stop_index): 
+		api_key = API_KEYS[current_key_index]
+		task = f'Go to {link[i]} to get available comments (limit scrolls: 2)' # task: yêu cầu AI thực hiện
+		asyncio.run(main(task, i, api_key))
+		if i != len(link) - 1:
+			current_key_index = (current_key_index + 1) % len(API_KEYS)
+			print(f'Change to API key No.: {current_key_index + 1}')
+			sleep_time = 30
+			print(f'Sleeping for {sleep_time} seconds...')
+			time.sleep(sleep_time)
 
