@@ -8,7 +8,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
 import logging
 
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 from browser_use import Agent, Controller
 from browser_use.browser.browser import Browser, BrowserConfig
@@ -20,7 +22,8 @@ logger = logging.getLogger(__name__)
 browser = Browser(
 	config=BrowserConfig(
 		headless=False,
-		chrome_instance_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+		# chrome_instance_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+		chrome_instance_path='D:\\chrome-win64\\chrome.exe',
 	)
 )
 controller = Controller()
@@ -88,7 +91,8 @@ async def main():
 
 	available_file_paths = [create_file('txt'), create_file('pdf'), create_file('csv')]
 
-	model = ChatOpenAI(model='gpt-4o')
+	# model = ChatOpenAI(model='gpt-4o')
+	model = ChatGoogleGenerativeAI(model='gemini-2.0-flash')
 	agent = Agent(
 		task=task,
 		llm=model,

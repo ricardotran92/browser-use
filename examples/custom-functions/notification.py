@@ -6,7 +6,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
 
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel
 
 from browser_use import ActionResult, Agent, Controller
@@ -36,7 +37,8 @@ async def done(text: str):
 
 async def main():
 	task = 'go to brower-use.com and then done'
-	model = ChatOpenAI(model='gpt-4o')
+	# model = ChatOpenAI(model='gpt-4o')
+	model = ChatGoogleGenerativeAI(model='gemini-2.0-flash')
 	agent = Agent(task=task, llm=model, controller=controller)
 
 	await agent.run()

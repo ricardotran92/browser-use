@@ -8,7 +8,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
 
 import pyperclip
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from browser_use import Agent, Controller
 from browser_use.browser.browser import Browser, BrowserConfig
@@ -40,7 +41,8 @@ async def paste_from_clipboard(browser: BrowserContext):
 
 async def main():
 	task = f'Copy the text "Hello, world!" to the clipboard, then go to google.com and paste the text'
-	model = ChatOpenAI(model='gpt-4o')
+	# model = ChatOpenAI(model='gpt-4o')
+	model = ChatGoogleGenerativeAI(model='gemini-2.0-flash')
 	agent = Agent(
 		task=task,
 		llm=model,

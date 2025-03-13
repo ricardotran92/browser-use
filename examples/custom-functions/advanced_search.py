@@ -9,7 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
 
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel
 
 from browser_use import ActionResult, Agent, Controller
@@ -79,7 +80,8 @@ names = [
 async def main():
 	task = 'use search_web with "find email address of the following ETH professor:" for each of the following persons in a list of actions. Finally return the list with name and email if provided'
 	task += '\n' + '\n'.join(names)
-	model = ChatOpenAI(model='gpt-4o')
+	# model = ChatOpenAI(model='gpt-4o')
+	model = ChatGoogleGenerativeAI(model='gemini-2.0-flash')
 	agent = Agent(task=task, llm=model, controller=controller, max_actions_per_step=20)
 
 	history = await agent.run()
