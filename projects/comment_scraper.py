@@ -32,7 +32,7 @@ API_KEYS = [
 	os.environ.get('GOOGLE_API_KEY_5')
 ]
 
-current_key_index = 1
+current_key_index = 0
 
 # Khởi tạo trình duyệt
 browser = Browser(
@@ -58,11 +58,7 @@ class Posts(BaseModel):
 controller = Controller(output_model=Posts) # output_model: AI model sẽ trả về kết quả đúng với định dạng Posts (danh sách các bài đăng). Nếu sai dịnh dạng, Pydantic sẽ báo lỗi.
 
 # Hàm chính. Main() là hàm bất đồng bộ.
-async def main(task, i, api_key):
-	model = ChatGoogleGenerativeAI(model='gemini-2.0-flash', api_key=api_key)
-	# Tạo Agent và chạy nhiệm vụ
-	agent = Agent(task=task, llm=model, controller=controller, browser=browser) # task: yêu cầu AI thực hiện. llm: model AI sử dụng. Controller: điều khiển và đảm bảo kết quả đúng định dạng Posts.
-	
+async def main(i):
 	history = await agent.run() # agent.run() chạy AI để thực nhiệm vụ. history chứa toàn bộ lịch sử của quá trình AI thực hiện nhiệm vụ.
 	# Kiểm tra kết quả
 	result = history.final_result() # Lấy kết quả cuối cùng dưới dạng JSON.
@@ -86,10 +82,36 @@ async def main(task, i, api_key):
 if __name__ == '__main__':
 	link = pd.read_csv('links.csv', encoding='utf-8', header=None).squeeze().tolist() # output: dataframe -> numpy.ndarray -> lists
 	stop_index = 2 # default: len(link)
-	for i in range(0, stop_index): 
+	for i in range(1, stop_index): 
 		api_key = API_KEYS[current_key_index]
-		task = f'Go to {link[i]} to get available comments (limit scrolls: 2)' # task: yêu cầu AI thực hiện
-		asyncio.run(main(task, i, api_key))
+		task = f"""
+		### Prompt for scraping comments in social network
+
+		**Objectives:**
+		Go to {link[i]} to get available comments
+
+		---
+
+		### Step 1: Navigate to link
+		- Open the link {link[i]}
+
+		---
+
+		### Step 2: Load comments:
+		- Scroll down to load more comments
+		- Click button texted "View more comments" to load more comments
+		- Limit scroll down: 6 times
+		
+		---
+
+		### Step 3: Get comments
+		- Get available comments (author and comment)
+		""" # task: yêu cầu AI thực hiện
+
+		model = ChatGoogleGenerativeAI(model='gemini-2.0-flash', api_key=api_key)
+		# Tạo Agent và chạy nhiệm vụ
+		agent = Agent(task=task, llm=model, controller=controller, browser=browser) # task: yêu cầu AI thực hiện. llm: model AI sử dụng. Controller: điều khiển và đảm bảo kết quả đúng định dạng Posts.
+		asyncio.run(main(i))
 		if i != len(link) - 1:
 			current_key_index = (current_key_index + 1) % len(API_KEYS)
 			print(f'Change to API key No.: {current_key_index + 1}')
